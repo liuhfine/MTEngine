@@ -54,7 +54,14 @@ struct Person final
 		std::cout << "Function Call isHuman age: "  << age << std::endl;
 		return true; };
 
+	static void printfcg();
+
 };
+
+void Person::printfcg()
+{
+};
+
 
 int funcPrint(bool, char*)
 {
@@ -67,8 +74,8 @@ constexpr auto reflected_type()
 	return TypeInfo<T>{};
 }
 
-/* tuple±éÀú
-* ²»¶¨Ä£°å²ÎÊıÕ¹¿ª
+/* tupleï¿½ï¿½ï¿½ï¿½
+* ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½
 */
 template <std::size_t... idx, typename Tuple, typename Func>
 void visitTuple(Tuple tuple, Func&& f, std::index_sequence<idx...>)
@@ -80,7 +87,7 @@ void visitTuple(Tuple tuple, Func&& f, std::index_sequence<idx...>)
 }
 
 /* part4
-* ¶ÔÀàĞÍÁĞ±íµÄ²Ù×÷
+* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½ï¿½Ä²ï¿½ï¿½ï¿½
 */
 template <typename... Remains>
 struct type_list {
@@ -145,7 +152,7 @@ struct get_integer_type_count<type_list<T, Remains...>, N> {
 	//typename get_integer_type_count<type_list<Remains...>, N - 1>;
 };
 
-// mapº¯Êı
+// mapï¿½ï¿½ï¿½ï¿½
 template <typename, template <typename> typename>
 struct Map1;
 
@@ -154,7 +161,7 @@ struct Map1<type_list<Args...>, Func>{
 	using type = type_list<typename Func<Args>::type ...>;
 };
 
-// ×·¼ÓÀàĞÍÔªËØ
+// ×·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½
 template <typename, typename>
 struct Cons;
 
@@ -163,7 +170,7 @@ struct Cons<T, type_list<Args2...>> {
 	using type = type_list<T, Args2...>;
 };
 
-// ÁĞ±íÆ´½Ó
+// ï¿½Ğ±ï¿½Æ´ï¿½ï¿½
 template <typename, typename>
 struct Concat;
 
@@ -172,7 +179,7 @@ struct Concat<type_list<Args1...>, type_list<Args2...>> {
 	using type = type_list<Args1..., Args2...>;
 };
 
-// È¥µôÎ²²¿ÔªËØ
+// È¥ï¿½ï¿½Î²ï¿½ï¿½Ôªï¿½ï¿½
 template <typename>
 struct Init;
 
@@ -186,7 +193,7 @@ struct Init<type_list<T, Remains...>> {
 	using type = typename Cons<T, typename Init<type_list<Remains...>>::type>::type;
 };
 
-//¹ıÂË 
+//ï¿½ï¿½ï¿½ï¿½ 
 template <typename, template <typename> typename>
 struct Filter;
 
@@ -237,7 +244,7 @@ struct remove_to_char
 	static constexpr bool value = !std::is_integral_v<T>;
 };
 
-// ¶¯Ì¬·´Éä
+// ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½
 enum MyEnum
 {
 	Value1 = 1,
@@ -289,7 +296,7 @@ namespace drefl
 	};
 
 	/*
-	* ¿ÉÒÔ´æ´¢ÈÎÒâÀàĞÍµÄÈİÆ÷
+	* ï¿½ï¿½ï¿½Ô´æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½
 	*/
 	class any final
 	{
@@ -427,19 +434,26 @@ namespace drefl
 		static std::string Kind2Name(Kind kind) { return g_kind_map[kind]; };
 
 		Kind GetNKind() const { return _kind; };
-		bool IsSigned() { return _isSigned; };
+		bool IsSigned() const { return _isSigned; };
 
 		void setValue(double val, any* elem) {
-			if (elem->typeinfo->getKind() != Type::Kind::Numeric)
+			if (elem->typeinfo->getKind() == Type::Kind::Numeric)
 			{
 				auto vv = dynamic_cast<const Numeric*>(elem->typeinfo);
 				auto kind = vv->GetNKind();
 				switch (kind)
 				{
 				case drefl::Numeric::Kind::Int8:
-					*static_cast<char*>(elem->_payload) = val;
-					// »¹ĞèÒª·ûºÅÅĞ¶Ï
-					//*static_cast<unsigned char*>(elem._payload) = val;
+				{
+					if (vv->IsSigned())// ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½
+					{
+						*static_cast<char*>(elem->_payload) = val;
+					}
+					else
+					{
+						*static_cast<unsigned char*>(elem->_payload) = val;
+					}
+				}
 					break;
 				case drefl::Numeric::Kind::Int16:
 					break;
@@ -522,34 +536,106 @@ namespace drefl
 		std::vector<Item> m_items;
 	};
 
-	class Field {
-	public:
+	//class Field {
+	//public:
 
-		template <typename T>
-		static Field createField(const std::string& name);
-		//private:
-		std::string _name;
-		const Type* _type;
+	//	template <typename T>
+	//	static Field createField(const std::string& name);
+	//	//private:
+	//	std::string _name;
+	//	const Type* _type;
+	//};
+
+	//struct Method
+	//{
+	//	//template <typename T>
+	//	//Method(const std::string& name) {};
+	////private:
+	//	std::string _name;
+	//	const Type* _return_type;
+	//	std::vector<const Type*> _params;
+
+	//	template <typename T>
+	//	static Method createMethod(const std::string& name);
+
+	//private:
+	//	template <typename Params, size_t... Idx>
+	//	static std::vector<const Type*> cvtType2Vector(std::index_sequence<Idx...>);
+	//};
+
+	class Member
+	{
+	public:
+		virtual drefl::any call(std::vector<const drefl::any*>& anies) = 0;
 	};
 
-	struct Method
+	template <typename clazz, typename Type>
+	class MemberVariable : public Member
 	{
+	public:
+		std::string name;
+		const Type* type;
+		Type clazz::* ptr;
 
-		//template <typename T>
-		//Method(const std::string& name) {};
-	//private:
-		std::string _name;
-		const Type* _return_type;
-		std::vector<const Type*> _params;
+		static MemberVariable Create(const std::string& _name);
 
-		template <typename T>
-		static Method createMethod(const std::string& name);
+		virtual drefl::any call(std::vector<const drefl::any*>& anies) override {
+
+			assert(anies.size() == 1 && anies[0]->typeinfo == drefl::GetType<Type>());
+			
+			clazz* instance = static_cast<clazz*>(anies[0]->_payload);
+			auto value = instance->*ptr;
+
+			return drefl::make_copy(value);
+		};
+	private:
+
+	};
+
+	template <typename T>
+	T& unwrap(drefl::any& value) {
+		assert(value.typeinfo == drefl::GetType<T>());
+		return *static_cast<T*>(value._payload);
+	}
+
+	template <typename clazz, typename RetType, size_t... Idx, typename... Args>
+	void inner_call(RetType(clazz::* ptr)(Args...), const std::vector<const drefl::any>& params, std::index_sequence<Idx...>) {
+		clazz* instance = static_cast<clazz*>(params [0]->_payload);
+		auto return_value = (instance->*ptr)(unwrap<Args>(params[Idx + 1])...);
+		//auto return_value = ((clazz::*)params[0]._payload->*ptr)(unwrap<Args>(params[Idx + 1])...);
+		return make_copy(return_value);
+	};
+
+	template <typename clazz, typename Type, typename... Args>
+	class MemberFunction : public Member
+	{
+	public:
+		std::string name;
+		const Type* retType;
+		std::vector<const Type*> paramTypes;
+		Type(clazz::* ptr)(Args...);
+
+		static MemberFunction Create(const std::string& _name);
+
+		virtual drefl::any call(std::vector<const drefl::any*>& anies) override {
+
+			assert(anies.size() == paramTypes.size() + 1)
+			for (int i=0; i < paramTypes.size(); ++i)
+			{
+				assert(paramTypes[i] == anies[i+1].typeinfo)
+			}
+
+			/*clazz* instance = static_cast<clazz*>(anies[0]->_payload);
+			auto value = (instance->*ptr)(...);*/
+
+			return inner_call(ptr, anies, std::make_index_sequence<sizeof...(Args)>());
+		};
 
 	private:
-		template <typename Params, size_t... Idx>
-		static std::vector<const Type*> cvtType2Vector(std::index_sequence<Idx...>);
-	};
+		//template <typename Params, size_t... Idx>
+		//static std::vector<const Type*> cvtType2Vector(std::index_sequence<Idx...>);
 
+	};
 
 	class Class : public Type
 	{
@@ -558,13 +644,25 @@ namespace drefl
 
 	public:
 		virtual ~Class() = default;
-		Class(std::string name) :Type(name, Type::Kind::Class) {};
-
-
-		void Add(Field&& field) {
-			_fields.emplace_back(std::move(field));
+		Class(std::string name) :Type(name, Type::Kind::Class) {
+			
 		};
-		void Add(Method&& method) {
+
+		template <typename clazz>
+		void create()
+		{
+			classType = GetType<clazz>();
+		}
+
+		template <typename clazz, typename Type>
+		void Add(MemberVariable<clazz, Type>&& field) {
+			//_fields.emplace_back(std::move(field));
+
+			//_fields.emplace_back(std::make_unique<MemberVariable<Person, float>>(std::move(field)));
+		};
+
+		template <typename clazz, typename Type, typename... Args>
+		void Add(MemberFunction<clazz, Type, Args...>&& method) {
 			_methods.emplace_back(std::move(method));
 		};
 
@@ -573,15 +671,16 @@ namespace drefl
 		};
 
 		auto& getMethod() const {
-			return _methods[0];
+			return _methods;
 		};
 
 	private:
+		const Type* classType;
 
 		// fields
-		std::vector<Field> _fields;
+		std::vector<std::unique_ptr<Member>> _fields;
 		// methods
-		std::vector<Method> _methods;
+		std::vector<std::unique_ptr<Member>> _methods;
 	};
 
 
@@ -664,6 +763,7 @@ namespace drefl
 			if (!_info)
 			{
 				_info = new Class(name);
+				_info->create<T>();
 			}
 
 			RegistrarType_Maps[name] = _info;
@@ -671,17 +771,17 @@ namespace drefl
 			return *this;
 		};
 
-		template <typename U>
+		template <typename T, typename U>
 		ClassFactory& Add(const std::string& valName) {
 
-			_info->Add(Field::createField<U>(valName));
+			//_info->Add(MemberVariable::Create<T, U>(valName));
 			return *this;
 		};
 
-		template <typename U>
+		template <typename T, typename U>
 		ClassFactory& AddMethod(const std::string& valName) {
 
-			_info->Add(Method::createMethod<U>(valName));
+			//_info->Add(MemberFunction::Create<T, U>(valName));
 			return *this;
 		};
 
@@ -727,39 +827,48 @@ namespace drefl
 		return &Factory<T>::GetFactory().Info();
 	}
 
-	template <typename T>
-	Field Field::createField(const std::string& name) {
-		//_type = GetType<T>();
-		//_type->setName(name);
-		Field field;
-		field._name = name;
-		field._type = GetType<T>();
-		//field1._type->setName(name);
-		return field;
+	//template <typename T>
+	//Field Field::createField(const std::string& name) {
+	//	//_type = GetType<T>();
+	//	//_type->setName(name);
+	//	Field field;
+	//	field._name = name;
+	//	field._type = GetType<T>();
+	//	//field1._type->setName(name);
+	//	return field;
+	//};
+
+	template <typename clazz, typename Type>
+	MemberVariable<clazz, Type>  MemberVariable<clazz, Type>::Create(const std::string& name) {
+		MemberVariable member;
+		member.name = name;
+		member.type = drefl::GetType<Type>();
+		member.ptr = nullptr; // éœ€è¦åœ¨å®é™…ä½¿ç”¨æ—¶æ­£ç¡®è®¾ç½®æˆå‘˜æŒ‡é’ˆ
+		return member;
 	};
 
-	template <typename T>
-	Method Method::createMethod(const std::string& name) {
-		using traits = function_traits<T>;
+	template <typename clazz, typename Type, typename... Args>
+	MemberFunction<clazz, Type, Args...> MemberFunction<clazz, Type, Args...>::Create(const std::string& name) {
+		using traits = function_traits<Type>;
 		using args = typename traits::args;
 
-		Method method;
-		method._name = name;
-		method._return_type = GetType<traits::return_type>();
+		MemberFunction method;
+		method.name = name;
+		method.retType = GetType<traits::return_type>();
 
 		auto ff = std::make_index_sequence<std::tuple_size_v<args>>();
-		method._params = cvtType2Vector<args>(ff);
+		//method.paramTypes = cvtType2Vector<args>(ff);
 
 		//return Method{ name, GetType<traits::return_type>(),
 		//	cvtType2Vector<args>(std::make_index_sequence<std::tuple_size_v<args>>())};
 		return method;
 	};
 
-	template <typename Params, size_t... Idx>
-	std::vector<const Type*> Method::cvtType2Vector(std::index_sequence<Idx...>)
+	/*template <typename Params, size_t... Idx>
+	std::vector<const Type*> MemberFunction::cvtType2Vector(std::index_sequence<Idx...>)
 	{
-		return {GetType<std::tuple_element_t<Idx, Params>>() ...};
-	};
+		return { GetType<std::tuple_element_t<Idx, Params>>() ... };
+	};*/
 
 	
 
@@ -961,84 +1070,84 @@ T* try_cast1(drefl::any* ay) {
 	}
 }
 
-class Member
-{
-public:
-	virtual drefl::any call(std::vector<const drefl::any*>& anies) = 0;
-};
+//class Member
+//{
+//public:
+//	virtual drefl::any call(std::vector<const drefl::any*>& anies) = 0;
+//};
+//
+//template <typename clazz, typename Type>
+//class MemberVariable : public Member
+//{
+//public:
+//	std::string name;
+//	const Type* type;
+//	Type clazz::* ptr;
+//
+//	virtual drefl::any call(std::vector<const drefl::any*>& anies) override {
+//
+//		if (anies.empty() || anies[0]->typeinfo == drefl::GetType<Type>())
+//		{
+//			assert(false);
+//		}
+//
+//		clazz* instance = static_cast<clazz*>(anies[0]->_payload);
+//		auto value = instance->*ptr;
+//
+//		return drefl::make_copy(value);
+//	};
+//
+//
+//	template <typename T>
+//	static MemberVariable Create(const std::string& _name) {
+//		return MemberVariable{ _name };
+//	};
+//private:
+//
+//};
 
-template <typename clazz, typename Type>
-class MemberVariable : public Member
-{
-public:
-	std::string name;
-	const Type* type;
-	Type clazz::* ptr;
-
-	virtual drefl::any call(std::vector<const drefl::any*>& anies) override {
-
-		if (anies.empty() || anies[0]->typeinfo == drefl::GetType<Type>())
-		{
-			assert(false);
-		}
-
-		clazz* instance = static_cast<clazz*>(anies[0]->_payload);
-		auto value = instance->*ptr;
-
-		return drefl::make_copy(value);
-	};
-
-
-	template <typename T>
-	static MemberVariable Create(const std::string& _name) {
-		return MemberVariable{ _name };
-	};
-private:
-
-};
-
-template <typename T>
-T& unwrap(drefl::any& value) {
-	assert(value->typeinfo == drefl::GetType<Type>());
-	return *(T*)value._payload;
-}
-
-template <typename clazz, typename RetType, size_t... Idx, typename... Args>
-void inner_call(RetType(drefl::Class::* ptr)(Args...), const std::vector<const drefl::any>& params) {
-	auto return_value = ((drefl::Class::*)params[0]._payload->*ptr)(unwrap<Args>(params[Idx + 1])...);
-
-	return make_copy(return_value);
-};
-
-
-template <typename clazz, typename Type, typename... Args>
-class MemberFunction : public Member
-{
-public:
-	std::string name;
-	const Type* return_type;
-	std::vector<const Type*> paramTypes;
-	Type (drefl::Class::* ptr) (Args...);
-
-
-	virtual drefl::any call(std::vector<const drefl::any*>& anies) override {
-
-		if (anies.empty() || anies[0]->typeinfo == drefl::GetType<Type>())
-		{
-			assert(false);
-		}
-
-		clazz* instance = static_cast<clazz*>(anies[0]->_payload);
-		auto value = instance->*ptr(...);
-
-		return drefl::make_copy(value);
-	};
-
-	template <typename T>
-	static MemberFunction Create(const std::string& name) {};
-private:
-
-};
+//template <typename T>
+//T& unwrap(drefl::any& value) {
+//	assert(value->typeinfo == drefl::GetType<Type>());
+//	return *(T*)value._payload;
+//}
+//
+//template <typename clazz, typename RetType, size_t... Idx, typename... Args>
+//void inner_call(RetType(drefl::Class::* ptr)(Args...), const std::vector<const drefl::any>& params) {
+//	auto return_value = ((drefl::Class::*)params[0]._payload->*ptr)(unwrap<Args>(params[Idx + 1])...);
+//
+//	return make_copy(return_value);
+//};
+//
+//
+//template <typename clazz, typename Type, typename... Args>
+//class MemberFunction : public Member
+//{
+//public:
+//	std::string name;
+//	const Type* return_type;
+//	std::vector<const Type*> paramTypes;
+//	Type (drefl::Class::* ptr) (Args...);
+//
+//
+//	virtual drefl::any call(std::vector<const drefl::any*>& anies) override {
+//
+//		if (anies.empty() || anies[0]->typeinfo == drefl::GetType<Type>())
+//		{
+//			assert(false);
+//		}
+//
+//		clazz* instance = static_cast<clazz*>(anies[0]->_payload);
+//		auto value = instance->*ptr(...);
+//
+//		return drefl::make_copy(value);
+//	};
+//
+//	template <typename T>
+//	static MemberFunction Create(const std::string& name) {};
+//private:
+//
+//};
 
 BEGIN_CLASS(Color)
 functions(
@@ -1297,9 +1406,9 @@ int main(int argc, char* argv[])
 	
 
  	auto& calsss = drefl::Registrar<Person>();
-	calsss.Regist("Person").Add<float>("height").Add<bool>("isFamily");
-	calsss.AddMethod<decltype(&Person::isHuman)>("isHuman");
-	calsss.AddMethod<decltype(&Person::IntroduceMyself)>("IntroduceMyself");
+	calsss.Regist("Person").Add<Person, float>("height").Add<Person, bool>("isFamily");
+	calsss.AddMethod<Person, decltype(&Person::isHuman)>("isHuman");
+	calsss.AddMethod<Person, decltype(&Person::IntroduceMyself)>("IntroduceMyself");
 
 	auto typeInfo3 = (drefl::Class*)(drefl::GetType<Person>());
 	typeInfo3->GetName();
@@ -1316,7 +1425,7 @@ int main(int argc, char* argv[])
 		auto dsfd = try_cast1<Person>(&aqa);
 		dsfd->height = 170;
 
-		MemberVariable<Person, float> memberVar;
+		drefl::MemberVariable<Person, float> memberVar;
 		memberVar.name = aqa.typeinfo->GetName();
 		memberVar.ptr = &Person::height;
 
@@ -1343,7 +1452,11 @@ int main(int argc, char* argv[])
 		person.isFamily = false;
 
 		drefl::any aqa = drefl::make_ref(person);
-		int i = 0;
+		
+		auto typeInfo33 = (drefl::Class*)(drefl::GetType<Person>());
+		auto method = typeInfo33->getMethod();
+		//method
+		
 	}
 
 	{
@@ -1355,7 +1468,7 @@ int main(int argc, char* argv[])
 		drefl::any aqa = drefl::make_constref(person);
 		int i = 0;
 	}
-	// any ÓÃÓÚÊµÏÖÀàĞÍinfo£¬¶Ô×¢²áÀàĞÍµÄÈÎÒâÊµÀıµ÷ÓÃinvoke
+	// any ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½infoï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½invoke
 	//Any any = person;
 	//typeInfo3->getMethod().call(any);
 

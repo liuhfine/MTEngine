@@ -1,8 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
+
+# 查找Git
+find_package(Git)
+if(GIT_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    message(STATUS "Git version: ${GIT_VERSION}")
+else()
+    set(GIT_VERSION "unknown")
+endif()
+
 project(MTEditor
-	VERSION "6.0"
-	DESCRIPTION "C++ user interface library for rendering"
-	LANGUAGES "C" "CXX"
+    VERSION ${GIT_VERSION}
+    DESCRIPTION "C++ user interface library for rendering"
+    LANGUAGES "C" "CXX"
 )
 
 # 设置 C++ 版本
@@ -16,11 +31,3 @@ option(SAMPLES "Build samples of the library." OFF)
 
 add_subdirectory(Editor)
 add_subdirectory(Runtime)
-
-
-
-
-
-
-
-
